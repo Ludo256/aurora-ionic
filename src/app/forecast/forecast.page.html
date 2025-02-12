@@ -1,0 +1,45 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Forecast</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">forecast</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Now & Tonight</ion-card-title>
+    </ion-card-header>
+  
+    <ion-card-content>
+      <app-now></app-now>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Coming Days</ion-card-title>
+    </ion-card-header>
+  
+    <ion-card-content>
+      <app-short-term></app-short-term>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Extended Forecast</ion-card-title>
+    </ion-card-header>
+  
+    <ion-card-content>
+      <app-long-term></app-long-term>
+    </ion-card-content>
+  </ion-card>
+
+
+</ion-content>
