@@ -7,11 +7,11 @@ import { firstValueFrom } from 'rxjs';
 })
 export class ApiService {
 
-    constructor(private httpClient: HttpClient) {
+  constructor(private httpClient: HttpClient) {
+    
+  }
 
-    }
-
-    async get(path: string) {
-        return await firstValueFrom(this.httpClient.get(`https://aurora-forecast-450321.uc.r.appspot.com/api${path}`));
-    }
+  async get(path: string) {
+      return await firstValueFrom(this.httpClient.get(`https://aurora-forecast-450321.uc.r.appspot.com/api${path}`));
+  }
 }

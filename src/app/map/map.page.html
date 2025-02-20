@@ -1,8 +1,8 @@
-<ion-header [translucent]="true">
+<!-- <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>map</ion-title>
+    <ion-title>{{selectedTime.toISOString()}}</ion-title>
   </ion-toolbar>
-</ion-header>
+</ion-header> -->
 
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
@@ -10,4 +10,23 @@
       <ion-title size="large">map</ion-title>
     </ion-toolbar>
   </ion-header>
+  <div #mapContainer class="map-container">
+
+  </div>
+
+  <ion-card class="dashboard-card">
+    <radial-aurora [auroraValue]="auroraValue">
+        
+    </radial-aurora>
+  </ion-card>
+
+  <div class="range-container ion-padding">
+    <ion-range labelPlacement="stacked" 
+    [min]="0"
+    [max]="100"
+    [step]="1"
+    (ionInput)="onSliderChange($event)"></ion-range>
+  </div>
+  
+  
 </ion-content>
