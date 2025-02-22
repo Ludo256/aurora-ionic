@@ -32,7 +32,7 @@ export class MapPage implements OnInit {
   constructor(private apiService: ApiService, private settingsService: SettingsService) {
     this.loadOvations();
 
-    this.settingsService.locationSubject.subscribe(location => {
+    this.settingsService.selectedLocationSubject.subscribe(location => {
       this.marker?.setLngLat([location.lon, location.lat]);
       this.updateMarkerValue();
     });
