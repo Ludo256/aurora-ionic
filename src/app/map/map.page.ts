@@ -1,6 +1,8 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 
 import { Map, NavigationControl, Marker } from 'maplibre-gl';
+import * as SunCalc from 'suncalc';
+
 import { Ovation } from '../utils/ovation';
 import { ApiService } from '../services/api.service';
 import { SettingsService } from '../services/settings.service';
@@ -68,20 +70,16 @@ export class MapPage implements OnInit {
                 'source': 'satellite',
             },
         ],
-        // 'sky': {
-        //     'atmosphere-blend': [
-        //         'interpolate',
-        //         ['linear'],
-        //         ['zoom'],
-        //         0, 0.7,
-        //         5, 0.7,
-        //         7, 0
-        //     ],
-        // },
-        // 'light': {
-        //     'anchor': 'map',
-        //     'position': [1.5, 0, 45]
-        // }
+        'sky': {
+            'atmosphere-blend': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                0, 0.6,
+                5, 0.6,
+                7, 0
+            ],
+        }
       }
     });
 
@@ -129,6 +127,7 @@ export class MapPage implements OnInit {
     this.minTime = this.ovations[0].time;
     this.maxTime = this.ovations[this.ovations.length - 1].time;
     this.selectedOvation = this.ovations[0];
+    this.selectedTime = this.minTime;
 
     if(this.mapLoaded) {
       this.loadOvationData(this.selectedOvation);
@@ -200,6 +199,7 @@ export class MapPage implements OnInit {
     }
 
     this.updateMarkerValue();
+    this.setLightPosition();
   }
 
   updateMarkerValue() {
@@ -212,4 +212,15 @@ export class MapPage implements OnInit {
       }
     }
   }
+
+  setLightPosition() {
+    // this.map?.setLight({
+    //   anchor: 'map',
+    //   position: [1.5, inclination, longitude-ish],
+    //   color: '#ffffff',
+    //   intensity:
+    //     Math.max(0.5, Math.min(1.0, 1.0 - Math.abs(altitude) / 90))
+    // });
+  }
 }
+
