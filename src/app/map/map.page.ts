@@ -30,6 +30,18 @@ export class MapPage implements OnInit {
   auroraValue: number = 0;
 
   constructor(private ovationService:OvationService, private settingsService: SettingsService) {
+
+  }
+
+  ngOnInit() {
+
+  }
+
+  ngAfterViewInit() {
+    this.initMap();
+  }
+
+  initOvations() {
     this.settingsService.selectedLocationSubject.subscribe(location => {
       this.selectedLatitude = location.lat;
       this.selectedLongitude = location.lon;
@@ -51,14 +63,15 @@ export class MapPage implements OnInit {
       this.maxTime = time;
       this.rangeValue = (this.selectedTime.getTime() - this.minTime.getTime()) / (this.maxTime.getTime() - this.minTime.getTime()) * 100;
     });
-  }
 
-  ngOnInit() {
-
-  }
-
-  ngAfterViewInit() {
-    this.initMap();
+    // Initialize the map with the existing ovations
+    this.ovationService.ovations.forEach(ovation => {
+      this.addOvationToMap(ovation);
+    });
+    this.minTime = this.ovationService.minTime;
+    this.maxTime = this.ovationService.maxTime;
+    this.rangeValue = (this.selectedTime.getTime() - this.minTime.getTime()) / (this.maxTime.getTime() - this.minTime.getTime()) * 100;
+    this.onSliderChange();
   }
 
   initMap() {
@@ -103,6 +116,7 @@ export class MapPage implements OnInit {
     this.map.on('load', () => {
       this.mapLoaded = true;
       this.initMarker();
+      this.initOvations();
     });
   }
 

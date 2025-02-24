@@ -201,4 +201,24 @@ export class OvationService {
     }
     return nearestOvation;
   }
+
+  public getValues(from: Date, to: Date, lon: number, lat: number) {
+    lon = Math.round((lon + 360 * 1000) % 360);
+    lat = Math.round(lat + 90);
+
+    const stack = [];
+    for(let ovation of this.ovations.values()) {
+      if(ovation.time >= from && ovation.time <= to) {
+        if(ovation.coordinates && ovation.coordinates[lon] && ovation.coordinates[lon][lat] != null) {
+          stack.push({
+            time: ovation.time,
+            value: ovation.coordinates[lon][lat]
+          });
+        }
+      }
+    }
+
+    stack.sort((a, b) => a.time.getTime() - b.time.getTime());
+    return stack;
+  }
 }
