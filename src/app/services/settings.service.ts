@@ -33,6 +33,14 @@ export class SettingsService {
   }
 
   setSelectedLocation(location: { lat: number, lon: number }) {
+
+    location.lon += 3600;
+    location.lon %= 360;
+    if (location.lon > 180) {
+      location.lon -= 360;
+    }
+
+
     this.selectedLocation = location;
     this.selectedLocationSubject.next(location);
   }

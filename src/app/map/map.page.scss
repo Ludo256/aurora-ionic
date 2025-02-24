@@ -1,5 +1,5 @@
 .map-container {
-    height: 100%;
+    height: calc(100% - 56px);
     width: 100%;
 
     position: absolute;
@@ -14,5 +14,22 @@
     bottom: 60px;
     position: absolute;
 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+
     padding: 0rem 4rem;
+}
+
+.time {
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 0.5rem;
+    color: white;
+    padding: 0.5rem;
+}
+
+.range {
+    width: 100%;
+    max-width: 600px;
 }

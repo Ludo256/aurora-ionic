@@ -1,10 +1,8 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 
 import { Map, NavigationControl, Marker } from 'maplibre-gl';
-import * as SunCalc from 'suncalc';
 
-import { Ovation } from '../utils/ovation';
-import { ApiService } from '../services/api.service';
+import { OvationService, Ovation } from '../services/ovation.service';
 import { SettingsService } from '../services/settings.service';
 
 @Component({
@@ -19,22 +17,39 @@ export class MapPage implements OnInit {
   map: Map | undefined;
   mapLoaded = false;
 
-  ovations: Ovation[] = [];
-  ovationsLoaded = false;
   minTime: Date = new Date();
   maxTime: Date = new Date();
-
+  rangeValue: number = 0;
   selectedTime: Date = new Date();
-  selectedOvation: Ovation | undefined;
+
   marker: Marker | undefined;
+  selectedLongitude: number = 0;
+  selectedLatitude: number = 0;
+
+  selectedOvation: Ovation | undefined;
   auroraValue: number = 0;
 
-  constructor(private apiService: ApiService, private settingsService: SettingsService) {
-    this.loadOvations();
-
+  constructor(private ovationService:OvationService, private settingsService: SettingsService) {
     this.settingsService.selectedLocationSubject.subscribe(location => {
+      this.selectedLatitude = location.lat;
+      this.selectedLongitude = location.lon;
       this.marker?.setLngLat([location.lon, location.lat]);
       this.updateMarkerValue();
+    });
+
+    this.ovationService.newOvationSubject.subscribe(ovation => {
+      this.addOvationToMap(ovation);
+      this.onSliderChange();
+    });
+
+    this.ovationService.minTimeSubject.subscribe(time => {
+      this.minTime = time;
+      this.rangeValue = (this.selectedTime.getTime() - this.minTime.getTime()) / (this.maxTime.getTime() - this.minTime.getTime()) * 100;
+    });
+
+    this.ovationService.maxTimeSubject.subscribe(time => {
+      this.maxTime = time;
+      this.rangeValue = (this.selectedTime.getTime() - this.minTime.getTime()) / (this.maxTime.getTime() - this.minTime.getTime()) * 100;
     });
   }
 
@@ -88,10 +103,6 @@ export class MapPage implements OnInit {
     this.map.on('load', () => {
       this.mapLoaded = true;
       this.initMarker();
-
-      if(this.ovationsLoaded) {
-        this.loadOvationData(this.ovations[0]);
-      }
     });
   }
 
@@ -110,37 +121,15 @@ export class MapPage implements OnInit {
     this.marker.setLngLat([location.lon, location.lat]).addTo(this.map);
 
     this.marker.on('drag', () => {
+      const latLng = this.marker?.getLngLat();
       this.settingsService.setSelectedLocation({
-        lat: this.marker?.getLngLat().lat || 0,
-        lon: this.marker?.getLngLat().lng || 0
+        lat: latLng?.lat || 0,
+        lon: latLng?.lng || 0
       });
     });
   }
 
-  async loadOvations() {
-    const results = await this.apiService.get('/forecast/ovations') as [any];
-    results.forEach(result => {
-      const ovation = new Ovation(this.apiService, new Date(result.time), new Date(result.issued), result.data);
-      this.ovations.push(ovation);
-    });
-    this.ovationsLoaded = true;
-    this.minTime = this.ovations[0].time;
-    this.maxTime = this.ovations[this.ovations.length - 1].time;
-    this.selectedOvation = this.ovations[0];
-    this.selectedTime = this.minTime;
-
-    if(this.mapLoaded) {
-      this.loadOvationData(this.selectedOvation);
-    }
-  }
-
-  async loadOvationData(ovation: Ovation) {
-    await ovation.loadData(() => {
-      this.addOvationToMap(ovation);
-      this.paintSelectedOvation();
-    });
-  }
-
+ 
   addOvationToMap(ovation: Ovation) {
     this.map?.addSource(`ovation-${ovation.time.getTime()}`, {
       type: 'image',
@@ -158,43 +147,32 @@ export class MapPage implements OnInit {
       source: `ovation-${ovation.time.getTime()}`,
       type: 'raster',
       paint: {
-        'raster-opacity': 0.0,
+        'raster-opacity': 0.5,
       },
+      layout: {
+        'visibility': 'none'
+      }
     });
   }
 
-  onSliderChange(event: any) {
-    this.selectedTime = new Date(this.minTime?.getTime() + (this.maxTime?.getTime() - this.minTime?.getTime()) * event.detail.value / 100);
-
-    let newSelectedOvation;
-    for(let i = 0; i < this.ovations.length; i++) {
-      if(this.ovations[i].time.getTime() > this.selectedTime.getTime()) {
-        break;
-      }
-      newSelectedOvation = this.ovations[i];
-    }
-
-    if(newSelectedOvation == null || newSelectedOvation == this.selectedOvation) {
-      return;
-    }
-
-    this.selectedOvation = newSelectedOvation;
-
-    if(!this.selectedOvation.image) {  
-      this.loadOvationData(this.selectedOvation);
-    } else {
+  onSliderChange() {
+    this.selectedTime = new Date(this.minTime?.getTime() + (this.maxTime?.getTime() - this.minTime?.getTime()) * this.rangeValue / 100);
+    const newOvation = this.ovationService.getNearestOvation(this.selectedTime);
+    if(newOvation != this.selectedOvation) {
+      this.selectedOvation = newOvation;
       this.paintSelectedOvation();
     }
   }
 
   paintSelectedOvation() {
-    for(let ovation of this.ovations) {
-      if(ovation === this.selectedOvation && this.map?.getLayer(`ovation-${ovation.time.getTime()}`)) {
-        this.map?.setPaintProperty(`ovation-${ovation.time.getTime()}`, 'raster-opacity', 0.5);
-      } else {
-        if(this.map?.getLayer(`ovation-${ovation.time.getTime()}`)) {
-          this.map?.setPaintProperty(`ovation-${ovation.time.getTime()}`, 'raster-opacity', 0.0);
-        }
+    const layers = this.map?.getStyle().layers || [];
+    for(let layer of layers) {
+      if(layer.id.startsWith('ovation-')) {
+        this.map?.setLayoutProperty(layer.id, 'visibility', 'none');
+      }
+      
+      if(layer.id == `ovation-${this.selectedOvation?.time.getTime()}`) {
+        this.map?.setLayoutProperty(layer.id, 'visibility', 'visible');
       }
     }
 
@@ -204,11 +182,17 @@ export class MapPage implements OnInit {
 
   updateMarkerValue() {
     const coordinates = this.marker?.getLngLat();
-    if(coordinates) {
-      const value = this.selectedOvation?.getValue(coordinates.lng, coordinates.lat);
+    let lon = coordinates?.lng || 0;
+    let lat = coordinates?.lat || 0;
 
-      if(value != null) {
-        this.auroraValue = value;
+    if(coordinates) {
+      lon = Math.round((lon + 360 * 1000) % 360);
+      lat = Math.round(lat + 90);
+
+      if(this.selectedOvation?.coordinates && this.selectedOvation.coordinates[lon] && this.selectedOvation.coordinates[lon][lat] != null) {
+        this.auroraValue = this.selectedOvation.coordinates[lon][lat];
+      } else {
+        this.auroraValue = 0;
       }
     }
   }

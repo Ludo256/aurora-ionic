@@ -1,13 +1,7 @@
-<!-- <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>{{selectedTime.toISOString()}}</ion-title>
-  </ion-toolbar>
-</ion-header> -->
-
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">map</ion-title>
+      {{selectedLatitude.toFixed(2)}}, {{selectedLongitude.toFixed(2)}}  
     </ion-toolbar>
   </ion-header>
   <div #mapContainer class="map-container">
@@ -21,11 +15,19 @@
   </ion-card>
 
   <div class="range-container ion-padding">
-    <ion-range labelPlacement="stacked" 
+      <ion-label class="time">{{selectedTime.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+      })}}</ion-label>
+    <ion-range labelPlacement="stacked" class="range"
+    [(ngModel)]="rangeValue"
     [min]="0"
     [max]="100"
-    [step]="1"
-    (ionInput)="onSliderChange($event)"></ion-range>
+    [step]="0.5"
+    (ionInput)="onSliderChange()"></ion-range>
   </div>
   
   
